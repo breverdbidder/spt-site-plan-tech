@@ -1,0 +1,75 @@
+{
+  "version": "1.0.0",
+  "project_name": "SPT - Site Plan Technology",
+  "created_by": "Ariel Shapira, Solo Founder",
+  "organization": "Everest Capital of Brevard LLC",
+  "last_updated": "2025-12-09T04:38:00Z",
+  "status": "INITIALIZED",
+  
+  "pipeline_stages": [
+    {"id": 1, "name": "Property Discovery", "status": "pending", "completion": 0},
+    {"id": 2, "name": "Zoning Analysis", "status": "pending", "completion": 0},
+    {"id": 3, "name": "Parking Analysis", "status": "pending", "completion": 0},
+    {"id": 4, "name": "Traffic Impact", "status": "pending", "completion": 0},
+    {"id": 5, "name": "Utilities Assessment", "status": "pending", "completion": 0},
+    {"id": 6, "name": "Environmental Review", "status": "pending", "completion": 0},
+    {"id": 7, "name": "Site Layout", "status": "pending", "completion": 0},
+    {"id": 8, "name": "ML Feasibility Score", "status": "pending", "completion": 0},
+    {"id": 9, "name": "Report Generation", "status": "pending", "completion": 0},
+    {"id": 10, "name": "Archive & Tracking", "status": "pending", "completion": 0}
+  ],
+  
+  "active_projects": [
+    {
+      "project_id": "SPT-2025-001",
+      "name": "Bliss Palm Bay",
+      "address": "2165 Sandy Pines Dr NE",
+      "account_id": "2835546",
+      "city": "Palm Bay",
+      "county": "Brevard",
+      "state": "FL",
+      "proposed_use": "Multi-story building (3-4 stories)",
+      "building_count": "1-2",
+      "status": "DISCOVERY",
+      "created_at": "2025-12-09T04:38:00Z",
+      "survey_uploaded": true,
+      "notes": "Initial survey uploaded. Parking area designated on west side."
+    }
+  ],
+  
+  "data_sources": {
+    "bcpao": {"url": "https://www.bcpao.us", "status": "configured"},
+    "palm_bay_zoning": {"url": "https://www.palmbayflorida.org", "status": "pending"},
+    "brevard_gis": {"url": "https://www.brevardcounty.us/gis", "status": "pending"},
+    "fdot_traffic": {"url": "https://www.fdot.gov", "status": "pending"}
+  },
+  
+  "smart_router": {
+    "free_tier_target": "40-55%",
+    "tiers": ["FREE", "ULTRA_CHEAP", "BUDGET", "PRODUCTION", "CRITICAL"],
+    "cost_tracking": {
+      "total_calls": 0,
+      "free_calls": 0,
+      "paid_calls": 0,
+      "estimated_savings": 0
+    }
+  },
+  
+  "recent_decisions": [],
+  
+  "supabase": {
+    "project_url": "mocerqjnksmhcjzxrewo.supabase.co",
+    "tables": {
+      "spt_projects": "Site plan projects",
+      "spt_analyses": "Analysis results",
+      "spt_reports": "Generated reports",
+      "insights": "Learning and metrics"
+    }
+  },
+  
+  "integrations": {
+    "github_repo": "breverdbidder/spt-site-plan-tech",
+    "vercel_project": "pending",
+    "github_actions": "pending"
+  }
+}
