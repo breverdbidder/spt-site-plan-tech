@@ -1,0 +1,28 @@
+{
+  "project": {
+    "name": "SPT - Site Plan Technology",
+    "version": "1.0.0",
+    "creator": "Ariel Shapira, Solo Founder",
+    "organization": "Everest Capital of Brevard LLC"
+  },
+  "ai_architect": {
+    "autonomous_mode": true,
+    "minimize_human_loop": true,
+    "state_file": "PROJECT_STATE.json",
+    "rules_file": "AI_ARCHITECT_RULES.md"
+  },
+  "integrations": {
+    "supabase": {
+      "project_url": "mocerqjnksmhcjzxrewo.supabase.co",
+      "tables": ["spt_projects", "spt_analyses", "insights"]
+    },
+    "github_actions": {
+      "workflows": [".github/workflows/site_analysis.yml"]
+    }
+  },
+  "conventions": {
+    "project_id_format": "SPT-YYYY-NNN",
+    "report_naming": "{project_id}_{type}_{date}.docx",
+    "commit_prefix": "🤖 Auto-update:"
+  }
+}
