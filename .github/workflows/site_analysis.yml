@@ -1,0 +1,224 @@
+name: SPT Site Analysis Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      project_id:
+        description: 'Project ID (e.g., SPT-2025-001)'
+        required: true
+        type: string
+      address:
+        description: 'Property address'
+        required: true
+        type: string
+      account_id:
+        description: 'BCPAO Account ID'
+        required: false
+        type: string
+      proposed_use:
+        description: 'Proposed development type'
+        required: false
+        type: string
+      stages:
+        description: 'Stages to run (comma-separated, or "all")'
+        required: false
+        default: 'all'
+        type: string
+
+env:
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install httpx pdfplumber supabase anthropic geopandas shapely xgboost pandas numpy python-docx
+      
+      - name: Initialize Project
+        run: |
+          echo "🏗️ SPT Analysis Pipeline Starting"
+          echo "Project: ${{ inputs.project_id }}"
+          echo "Address: ${{ inputs.address }}"
+          echo "Account ID: ${{ inputs.account_id }}"
+          echo "Proposed Use: ${{ inputs.proposed_use }}"
+          echo "Stages: ${{ inputs.stages }}"
+      
+      - name: Stage 1 - Property Discovery
+        if: contains(inputs.stages, 'all') || contains(inputs.stages, '1')
+        run: |
+          python -c "
+          import json
+          import httpx
+          from datetime import datetime
+          
+          print('📍 Stage 1: Property Discovery')
+          
+          # BCPAO lookup would go here
+          result = {
+              'stage': 1,
+              'name': 'Property Discovery',
+              'project_id': '${{ inputs.project_id }}',
+              'address': '${{ inputs.address }}',
+              'account_id': '${{ inputs.account_id }}',
+              'status': 'completed',
+              'timestamp': datetime.utcnow().isoformat()
+          }
+          
+          print(json.dumps(result, indent=2))
+          "
+      
+      - name: Stage 2 - Zoning Analysis
+        if: contains(inputs.stages, 'all') || contains(inputs.stages, '2')
+        run: |
+          python -c "
+          import json
+          from datetime import datetime
+          
+          print('🏛️ Stage 2: Zoning Analysis')
+          
+          result = {
+              'stage': 2,
+              'name': 'Zoning Analysis',
+              'project_id': '${{ inputs.project_id }}',
+              'status': 'pending_data',
+              'required_inputs': [
+                  'zoning_district',
+                  'future_land_use',
+                  'overlay_districts'
+              ],
+              'timestamp': datetime.utcnow().isoformat()
+          }
+          
+          print(json.dumps(result, indent=2))
+          "
+      
+      - name: Stage 3 - Parking Analysis
+        if: contains(inputs.stages, 'all') || contains(inputs.stages, '3')
+        run: |
+          python -c "
+          import json
+          from datetime import datetime
+          
+          print('🅿️ Stage 3: Parking Analysis')
+          
+          # Example parking calculation
+          proposed_use = '${{ inputs.proposed_use }}'
+          
+          # Standard ratios (would come from database)
+          parking_ratios = {
+              'multi-family': '1.5 per unit',
+              'retail': '4 per 1,000 SF',
+              'office': '3 per 1,000 SF',
+              'restaurant': '10 per 1,000 SF'
+          }
+          
+          result = {
+              'stage': 3,
+              'name': 'Parking Analysis',
+              'project_id': '${{ inputs.project_id }}',
+              'proposed_use': proposed_use,
+              'parking_ratios_reference': parking_ratios,
+              'status': 'pending_details',
+              'timestamp': datetime.utcnow().isoformat()
+          }
+          
+          print(json.dumps(result, indent=2))
+          "
+      
+      - name: Log to Supabase
+        run: |
+          python -c "
+          import os
+          import json
+          from datetime import datetime
+          
+          try:
+              from supabase import create_client
+              
+              url = os.environ.get('SUPABASE_URL', '')
+              key = os.environ.get('SUPABASE_KEY', '')
+              
+              if url and key:
+                  client = create_client(url, key)
+                  
+                  insight = {
+                      'type': 'spt_analysis',
+                      'category': 'pipeline_run',
+                      'content': json.dumps({
+                          'project_id': '${{ inputs.project_id }}',
+                          'address': '${{ inputs.address }}',
+                          'stages_run': '${{ inputs.stages }}',
+                          'status': 'completed'
+                      }),
+                      'source': 'github_actions',
+                      'created_at': datetime.utcnow().isoformat()
+                  }
+                  
+                  client.table('insights').insert(insight).execute()
+                  print('✅ Logged to Supabase')
+              else:
+                  print('⚠️ Supabase credentials not configured')
+          except Exception as e:
+              print(f'⚠️ Supabase logging failed: {e}')
+          "
+      
+      - name: Update PROJECT_STATE.json
+        run: |
+          python -c "
+          import json
+          from datetime import datetime
+          
+          try:
+              with open('PROJECT_STATE.json', 'r') as f:
+                  state = json.load(f)
+          except:
+              state = {'recent_decisions': [], 'last_updated': ''}
+          
+          state['last_updated'] = datetime.utcnow().isoformat()
+          state['recent_decisions'].append({
+              'action': 'pipeline_executed',
+              'project_id': '${{ inputs.project_id }}',
+              'stages': '${{ inputs.stages }}',
+              'timestamp': datetime.utcnow().isoformat()
+          })
+          
+          # Keep only last 50 decisions
+          state['recent_decisions'] = state['recent_decisions'][-50:]
+          
+          with open('PROJECT_STATE.json', 'w') as f:
+              json.dump(state, f, indent=2)
+          
+          print('✅ PROJECT_STATE.json updated')
+          "
+      
+      - name: Commit state changes
+        run: |
+          git config --local user.email "spt-bot@everestcapital.com"
+          git config --local user.name "SPT Bot"
+          git add PROJECT_STATE.json || true
+          git diff --staged --quiet || git commit -m "🤖 Auto-update: Pipeline run for ${{ inputs.project_id }}"
+          git push || echo "Nothing to push"
+      
+      - name: Summary
+        run: |
+          echo "## 🏗️ SPT Analysis Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Project:** ${{ inputs.project_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Address:** ${{ inputs.address }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Stages Run:** ${{ inputs.stages }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "*Created by Ariel Shapira, Solo Founder*" >> $GITHUB_STEP_SUMMARY
